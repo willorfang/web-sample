@@ -1,8 +1,14 @@
-var http = require('http');
+var http = require('https');
+var fs = require('fs');
+var expand_tilde = require('expand-tilde');
 var formidable = require('formidable');
 var port = 3000;
 
-var server = http.createServer(function(req, res) {
+var options = {
+	key: fs.readFileSync(expand_tilde('~/.ssh/key.pem')),
+	cert: fs.readFileSync(expand_tilde('~/.ssh/key-cert.pem'))
+};
+var server = http.createServer(options, function(req, res) {
 	if ('/' == req.url) {
 		switch(req.method) {
 			case 'GET':
