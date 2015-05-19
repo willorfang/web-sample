@@ -1,6 +1,6 @@
 var http = require('http');
+var formidable = require('formidable');
 var port = 3000;
-var items = [];
 
 var server = http.createServer(function(req, res) {
 	if ('/' == req.url) {
@@ -9,7 +9,7 @@ var server = http.createServer(function(req, res) {
 				show(res);
 				break;
 			case 'POST':
-				add(req, res);
+				upload(req, res);
 				break;
 			default:
 				badRequest(res);
@@ -27,14 +27,10 @@ function show(res)
 {
   var html = '<html><head><title>Todo List</title></head><body>'
 			+ '<h1>Todo List</h1>'
-			+ '<ul>'
-			+ items.map(function(item){
-    			return '<li>' + item + '</li>';
-  			  }).join('')
-			+ '</ul>'
-           	+ '<form method="post" action="/">'
-           	+ '<p><input type="text" name="item" /></p>'
-           	+ '<p><input type="submit" value="Add Item" /></p>'
+           	+ '<form method="post" action="/" enctype="multipart/form-data">'
+           	+ '<p><input type="text" name="name" /></p>'
+           	+ '<p><input type="file" name="file" /></p>'
+           	+ '<p><input type="submit" value="Upload" /></p>'
            	+ '</form></body></html>';
   res.setHeader('Content-Type', 'text/html');
   res.setHeader('Content-Length', Buffer.byteLength(html));
@@ -55,17 +51,30 @@ function badRequest(res)
 	res.end('Bad Request');
 }
 
-function add(req, res)
+function isFormData(req)
 {
-	var qs = require('querystring');
-	var body = '';
-	req.setEncoding('utf8');
-	req.on('data', function(chunked) {
-		body += chunked;
+	var type = req.headers['content-type'] || '';
+	return 0 == type.indexOf('multipart/form-data');
+}
+
+function upload(req, res)
+{
+	if (!isFormData(req)) {
+		badRequest(res);
+	}
+
+	var form = new formidable.IncomingForm();
+	form.on('progress', function(recv, expect) {
+		var percent = Math.floor(recv/expect*100);
+		console.log(percent);
 	});
-	req.on('end', function() {
-		body = qs.parse(body);
-		items.push(body.item);
-		show(res);
+	form.parse(req, function(err, fields, files) {
+		if (err) {
+			badRequest(res);
+		} else {
+			console.log(fields);
+			console.log(files);
+			res.end('Upload complete!');
+		}
 	});
 }
