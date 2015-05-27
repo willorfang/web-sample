@@ -8,7 +8,7 @@ res.message = function(msg, type) {
 	sess.messages.push({ type: type, string: msg});
 };
 
-res.error = function(msq) {
+res.error = function(msg) {
 	return this.message(msg, 'error');
 };
 

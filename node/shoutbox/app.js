@@ -9,7 +9,9 @@ var expressSession = require('express-session');
 var routes = require('./routes/index');
 var users = require('./routes/users');
 var register = require('./routes/register');
+var login = require('./routes/login');
 var messages = require('./models/messages');
+var user = require('./models/middleware/user');
 
 var app = express();
 
@@ -24,13 +26,17 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(expressSession({ secret: 'abcdefghijklmn' }));
-app.use(messages);
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(user);
+app.use(messages);
 
 app.use('/', routes);
 app.use('/users', users);
 app.get('/register', register.form);
 app.post('/register', register.submit);
+app.get('/login', login.form);
+app.post('/login', login.submit);
+app.get('/logout', login.logout);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
